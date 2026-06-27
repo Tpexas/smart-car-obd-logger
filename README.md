@@ -14,6 +14,14 @@ ELM327 (Bluetooth)            ESP32                  Phone hotspot (4G)        V
                                                                         └──────────────┘
 ```
 
+## Dashboard
+
+Live ThingsBoard dashboard driven by the simulator — gauges for RPM, speed,
+coolant, voltage and fuel, plus a time-series chart showing the simulated drive
+cycle (idle → accelerate → cruise → decelerate).
+
+![Smart Car dashboard](docs/dashboard.png)
+
 ## Why the abstraction
 
 The firmware programs against [`ITelemetrySource`](include/ITelemetrySource.h).

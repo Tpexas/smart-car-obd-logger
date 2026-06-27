@@ -48,12 +48,12 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ---
 
-## Phase 1 — Dashboard (one evening, ~2–3 h)
-Build the ThingsBoard dashboard on the **simulator** data (no car needed).
-- [ ] Add widgets: speed gauge, RPM gauge, coolant thermometer, voltage, fuel level
-- [ ] Add a time-series chart (rpm + speed) — shows the realistic drive cycle
-- [ ] Tune ranges/colors (red zone on coolant, etc.)
-- [ ] Screenshot → README
+## Phase 1 — Dashboard (DONE ✅)
+Built the ThingsBoard dashboard on the **simulator** data (no car needed).
+- [x] Add widgets: speed gauge, RPM gauge, coolant, voltage, fuel level, throttle, load
+- [x] Add a time-series chart (rpm + speed) — shows the realistic drive cycle
+- [x] Tune ranges/colors (red zone on coolant, etc.)
+- [x] Screenshot → README (`docs/dashboard.png`)
 
 > **You can show:** a full gauge dashboard. First properly screenshot-worthy artifact.
 
