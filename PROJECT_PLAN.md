@@ -29,7 +29,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 0 — Pipeline (DONE ✅)
 - [x] ESP32 firmware, simulator data source
-- [x] MQTT over TLS → Mosquitto broker (`mqtt.mazured.com:8883`)
+- [x] MQTT over TLS → Mosquitto broker (`mqtt.<your-domain>:8883`)
 - [x] Node-RED subscribed
 - [x] ThingsBoard device receiving all 8 telemetry keys
 - [x] Server secured (default ThingsBoard passwords changed)

@@ -1,6 +1,6 @@
 #pragma once
 //
-// Trust anchors for the TLS connection to mqtt.mazured.com:8883.
+// Trust anchors for the TLS connection to the broker (mqtt.<your-domain>:8883).
 // The broker uses a Let's Encrypt certificate. Its leaf chains through the
 // "E8" intermediate to ISRG Root X2 (ECDSA), which is itself cross-signed by
 // ISRG Root X1 (RSA). Both roots are included so validation succeeds regardless
