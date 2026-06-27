@@ -1,5 +1,6 @@
 #include "MqttPublisher.h"
 #include <ArduinoJson.h>
+#include <time.h>
 
 MqttPublisher::MqttPublisher(const char* host, uint16_t port,
                              const char* clientId,
@@ -65,6 +66,11 @@ bool MqttPublisher::publish(const TelemetrySnapshot& s) {
     // Flat JSON of key/value telemetry — this is exactly the shape ThingsBoard
     // expects on its telemetry topic, and it's trivial to parse in Node-RED.
     JsonDocument doc;
+    // Trip/session identity + real wall-clock time. The device timestamp (not the
+    // server's arrival time) is what makes buffered/offline data line up correctly
+    // later — see Phase 3.
+    doc["trip_id"]  = _tripId;
+    doc["ts"]       = (uint64_t)time(nullptr) * 1000ULL;   // epoch milliseconds
     doc["rpm"]      = (int)(s.rpm + 0.5f);
     doc["speed"]    = round(s.speedKph * 10) / 10.0;
     doc["coolant"]  = round(s.coolantTempC * 10) / 10.0;

@@ -19,6 +19,9 @@ public:
     bool connected();
     bool publish(const TelemetrySnapshot& s);
 
+    // Identifies the current trip/session (one per power-on). Stamped on every message.
+    void setTripId(const char* tripId) { _tripId = tripId; }
+
 private:
     bool reconnect();
 
@@ -31,6 +34,7 @@ private:
     const char* _username;
     const char* _password;
     const char* _topic;
+    const char* _tripId = "";
 
     uint32_t _lastReconnectMs = 0;
     uint32_t _backoffMs       = 1000;   // grows up to a cap on repeated failures

@@ -87,6 +87,14 @@ void setup() {
     connectWifi();
     syncTime();
 
+    // One trip = one power-on session. Derive a stable ID from the boot time so
+    // every message in this session shares it, making trip segmentation trivial
+    // downstream. (Needs the NTP sync above to be meaningful.)
+    static char tripId[24];
+    snprintf(tripId, sizeof(tripId), "trip-%ld", (long)time(nullptr));
+    mqtt.setTripId(tripId);
+    Serial.printf("[Trip] id = %s\n", tripId);
+
     if (!telemetry.begin()) {
         Serial.println("[Source] begin() failed!");
     }
