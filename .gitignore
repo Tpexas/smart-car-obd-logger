@@ -1,0 +1,11 @@
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# Local secrets — real config lives here, template is config.example.h
+include/config.h
