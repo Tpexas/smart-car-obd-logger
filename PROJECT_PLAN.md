@@ -38,10 +38,10 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ---
 
-## Phase 0.5 — Put it on GitHub (30 min) ← do this first, today
-- [ ] `git init`, commit the firmware project
-- [ ] Create a **public** GitHub repo, push
-- [ ] Confirm `config.h` is git-ignored (secrets stay out) — it is
+## Phase 0.5 — Put it on GitHub (DONE ✅)
+- [x] `git init`, commit the firmware project
+- [x] Create a **public** GitHub repo, push → https://github.com/Tpexas/smart-car-obd-logger
+- [x] Confirm `config.h` is git-ignored (secrets stay out) — it is
 
 > **You can show:** a public repo link. This is a commitment device — it's "real"
 > now. **Do every future phase as: build → commit → push → add a screenshot to the README.**
