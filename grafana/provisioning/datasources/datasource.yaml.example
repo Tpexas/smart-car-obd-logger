@@ -1,0 +1,18 @@
+# Copy to datasource.yaml and fill in the password (that copy is git-ignored).
+# Grafana auto-loads this on startup — no clicking needed.
+apiVersion: 1
+datasources:
+  - name: SmartCar
+    uid: smartcar_pg
+    type: postgres
+    access: proxy
+    url: postgres:5432          # docker network hostname
+    database: smartcar
+    user: smartcar
+    isDefault: true
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
+    secureJsonData:
+      password: CHANGE_ME        # the postgres password

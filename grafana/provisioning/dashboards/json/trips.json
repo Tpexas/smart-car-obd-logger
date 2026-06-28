@@ -1,0 +1,111 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 0,
+  "schemaVersion": 39,
+  "tags": ["smartcar"],
+  "time": { "from": "now-90d", "to": "now" },
+  "title": "Smart Car — Trips",
+  "uid": "smartcar-trips",
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total trips",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT count(*) AS value FROM trips",
+          "datasource": { "type": "postgres", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Total distance",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT COALESCE(sum(distance_km),0) AS value FROM trips",
+          "datasource": { "type": "postgres", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "lengthkm", "decimals": 1, "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Total drive time",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT COALESCE(sum(duration_s),0) AS value FROM trips",
+          "datasource": { "type": "postgres", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Avg speed (all trips)",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT COALESCE(avg(avg_speed),0) AS value FROM trips",
+          "datasource": { "type": "postgres", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "velocitykmh", "decimals": 1, "color": { "mode": "fixed", "fixedColor": "orange" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Trips",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 4 },
+      "datasource": { "type": "postgres", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT started_at AS \"Start\", duration_s AS \"Duration (s)\", round(distance_km::numeric,2) AS \"Distance (km)\", round(avg_speed::numeric,1) AS \"Avg (km/h)\", max_speed AS \"Max (km/h)\", round(avg_rpm::numeric,0) AS \"Avg RPM\", samples AS \"Samples\" FROM trips ORDER BY started_at DESC",
+          "datasource": { "type": "postgres", "uid": "smartcar_pg" } }
+      ],
+      "options": { "showHeader": true },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Distance per trip (km)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "postgres", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT to_char(started_at,'MM-DD HH24:MI') AS trip, round(distance_km::numeric,2) AS \"Distance (km)\" FROM trips ORDER BY started_at",
+          "datasource": { "type": "postgres", "uid": "smartcar_pg" } }
+      ],
+      "options": { "xField": "trip", "orientation": "auto", "showValue": "auto", "stacking": "none" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" }, "custom": { "lineWidth": 1, "fillOpacity": 80 } }, "overrides": [] }
+    },
+    {
+      "id": 7,
+      "type": "barchart",
+      "title": "Avg vs max speed per trip (km/h)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "datasource": { "type": "postgres", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT to_char(started_at,'MM-DD HH24:MI') AS trip, round(avg_speed::numeric,1) AS \"Avg (km/h)\", max_speed AS \"Max (km/h)\" FROM trips ORDER BY started_at",
+          "datasource": { "type": "postgres", "uid": "smartcar_pg" } }
+      ],
+      "options": { "xField": "trip", "orientation": "auto", "showValue": "auto", "stacking": "none" },
+      "fieldConfig": { "defaults": { "custom": { "lineWidth": 1, "fillOpacity": 80 } }, "overrides": [] }
+    }
+  ]
+}

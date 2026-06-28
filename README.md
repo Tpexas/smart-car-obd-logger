@@ -22,6 +22,15 @@ cycle (idle → accelerate → cruise → decelerate).
 
 ![Smart Car dashboard](docs/dashboard.png)
 
+## Trip analysis (Grafana)
+
+Per-trip summaries land in a Postgres `trips` table (one row per trip, computed by
+Node-RED at trip end). Grafana — auto-provisioned from
+[grafana/provisioning/](grafana/provisioning/) — visualizes them: totals, a trips
+table, and bar charts comparing distance and speed across trips.
+
+![Grafana trips dashboard](docs/grafana-trips.png)
+
 ## Why the abstraction
 
 The firmware programs against [`ITelemetrySource`](include/ITelemetrySource.h).

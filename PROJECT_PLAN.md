@@ -103,14 +103,16 @@ car instantly produces real, analyzable trips.
 
 ## 🏁 SHIP IT LINE — after Phase 5 the project is DONE & portfolio-ready
 
-## Phase 5 — Analysis dashboard: Grafana (~half day)
-- [ ] Add **Grafana** container, connect to the Postgres `trips` table
-- [ ] Build comparison panels: fuel per trip, time per trip, avg speed, a
-      bar/table comparing trips, a scatter (e.g. fuel vs avg speed)
-- [ ] Screenshot → README
+## Phase 5 — Analysis dashboard: Grafana (DONE ✅ on simulated trips)
+- [x] Add **Grafana** container, connect to the Postgres `trips` table
+- [x] Auto-provisioned datasource + dashboard (`grafana/provisioning/`)
+- [x] Comparison panels: totals, trips table, distance/speed bar charts per trip
+- [x] Screenshot → README (`docs/grafana-trips.png`)
+- [ ] *(later)* public URL behind nginx (grafana.mazured.com) — currently via SSH tunnel
 
-> **You can show:** "here are my last N trips compared." **This is a complete,
-> impressive portfolio project. You may stop here with a finished result.**
+> **You can show:** "here are my last N trips compared." The analysis surface is
+> built. Once **real car** data (Phase 4) flows in, this fills with real trips and
+> the project is a complete, finished result.
 
 ---
 

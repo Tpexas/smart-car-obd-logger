@@ -9,3 +9,6 @@
 
 # Local secrets — real config lives here, template is config.example.h
 include/config.h
+
+# Grafana datasource with the DB password (template is the .example)
+grafana/provisioning/datasources/datasource.yaml
