@@ -59,15 +59,13 @@ Built the ThingsBoard dashboard on the **simulator** data (no car needed).
 
 ---
 
-## Phase 2 — Trips become first-class (one weekend, ~half day)
+## Phase 2 — Trips become first-class (DONE ✅)
 This is what turns "telemetry" into a "trip log."
-- [ ] **Firmware:** generate a `trip_id` at boot (epoch timestamp or UUID), include
-      it + a real epoch timestamp in every message
-- [ ] **Node-RED:** detect trip start/end (first message of a `trip_id` / a gap or
-      power-off), and at trip end **compute a summary**:
-      duration, distance (∫ speed dt), avg/max speed, avg RPM, min/max coolant
-- [ ] **Postgres:** write one row per trip to a `trips` table
-- [ ] Run a few simulated "trips," confirm rows appear
+- [x] **Firmware:** generate a `trip_id` at boot + a real epoch timestamp in every message
+- [x] **Postgres:** dedicated `postgres` container; `telemetry` (raw) + `trips` tables (`db/schema.sql`)
+- [x] **Node-RED:** `nodered/trip-logger-flow.json` — inserts raw rows; on 90s idle
+      (trip end) upserts a summary: duration, distance (∫ speed dt), avg/max speed, avg/max RPM
+- [x] Verified: a trip computed correctly (48s, 0.29 km, avg 22.4 km/h, 49 samples)
 
 > **You can show:** a `trips` table that grows by one row each time you "drive."
 > This is the backbone of the whole logger.
