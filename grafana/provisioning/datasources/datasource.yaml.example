@@ -1,16 +1,20 @@
 # Copy to datasource.yaml and fill in the password (that copy is git-ignored).
 # Grafana auto-loads this on startup — no clicking needed.
+#
+# NOTE (Grafana 11/12): the database name MUST go under jsonData.database.
+# The old top-level `database:` field passes the health check but breaks queries
+# with "no default database configured".
 apiVersion: 1
 datasources:
   - name: SmartCar
     uid: smartcar_pg
-    type: postgres
+    type: grafana-postgresql-datasource
     access: proxy
     url: postgres:5432          # docker network hostname
-    database: smartcar
     user: smartcar
     isDefault: true
     jsonData:
+      database: smartcar
       sslmode: disable
       postgresVersion: 1600
       timescaledb: false
