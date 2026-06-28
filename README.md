@@ -29,7 +29,7 @@ Node-RED at trip end). Grafana — auto-provisioned from
 [grafana/provisioning/](grafana/provisioning/) — visualizes them: totals, a trips
 table, and bar charts comparing distance and speed across trips.
 
-![Grafana trips dashboard](docs/grafana-trips.png)
+![Grafana trips dashboard](docs/grafana.png)
 
 ## Why the abstraction
 
