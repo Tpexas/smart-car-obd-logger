@@ -84,20 +84,20 @@ So a dropped 4G signal doesn't punch holes in a trip.
 
 ---
 
-## Phase 4 — REAL CAR 🚗 (needs car access — schedule a specific day; ~1 day)
-The big payoff. By now the whole analysis pipeline is ready, so plugging in the
-car instantly produces real, analyzable trips.
-- [ ] Write **`ELM327Source`** implementing `ITelemetrySource` (Bluetooth Classic
-      to the ELM327) — change **one line** in `main.cpp` to use it
-- [ ] Scan which **PIDs your car supports** — critically **MAF (`0110`)** or
-      **fuel rate (`015E`)** → determines if real fuel consumption is possible
-- [ ] Add fuel-consumption calc (MAF → L, integrate per trip)
-- [ ] Verify ESP32 BT + WiFi coexistence is stable
-- [ ] **Drive one real trip**, confirm it logs end-to-end
-- [ ] Power: 12V→5V buck off the OBD port (or USB from the car for now)
+## Phase 4 — REAL CAR 🚗 (mostly DONE ✅ — connection verified)
+The big payoff. Plugging in the car now produces real OBD data.
+- [x] **`ELM327Source`** (Bluetooth Classic to the ELM327) — one-line switch via `USE_ELM327`
+- [x] Connect by **MAC + PIN 1234** (name lookup was unreliable); confirmed car exposes MAF/fuel
+- [x] Fuel calc: MAF → instantaneous fuel rate (diesel constants) in the payload
+- [x] BT + WiFi + TLS coexistence handled (MQTT-first startup, BLE mem release,
+      self-heal reboot with trip_id preserved in RTC) — stable in driveway test
+- [x] Verified end-to-end: `obd-ready` + real telemetry in Postgres (engine off: rpm/speed 0, 12 V)
+- [ ] **Drive one real trip with the engine running** → capture live RPM/speed/MAF/fuel
+- [ ] Store fuel per trip: add `maf`/`fuel_rate` columns + trip fuel-total aggregation
+- [ ] Power: 12V→5V buck off the OBD port (or USB power bank for now)
 
-> **You can show:** your *actual car's* data in the dashboard + a real trip in the
-> trips table. The "it really works" moment.
+> **You can show:** your *actual car's* data in the dashboard. The "it really works"
+> moment — achieved. Just needs a real drive to fill in the moving-vehicle values.
 
 ---
 
