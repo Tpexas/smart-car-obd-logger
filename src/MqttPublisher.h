@@ -22,6 +22,13 @@ public:
     // Identifies the current trip/session (one per power-on). Stamped on every message.
     void setTripId(const char* tripId) { _tripId = tripId; }
 
+    // Topic for device/OBD status messages (retained, so the last state is visible).
+    void setStatusTopic(const char* topic) { _statusTopic = topic; }
+    bool publishStatus(const char* state);
+    // Bluetooth scan / pairing diagnostic — its OWN retained topic so a later status
+    // message can't overwrite it.
+    bool publishDiag(const char* text);
+
 private:
     bool reconnect();
 
@@ -35,6 +42,7 @@ private:
     const char* _password;
     const char* _topic;
     const char* _tripId = "";
+    const char* _statusTopic = nullptr;
 
     uint32_t _lastReconnectMs = 0;
     uint32_t _backoffMs       = 1000;   // grows up to a cap on repeated failures

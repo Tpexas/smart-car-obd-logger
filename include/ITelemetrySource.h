@@ -16,4 +16,16 @@ public:
 
     // Human-readable name, used in logs.
     virtual const char* name() const = 0;
+
+    // Is the source currently delivering data? (e.g. ELM327 Bluetooth link up.)
+    // The simulator is always "connected".
+    virtual bool connected() const { return true; }
+
+    // Short status string published to MQTT so the device state is visible
+    // remotely (no serial cable needed).
+    virtual const char* statusText() const { return "ok"; }
+
+    // Optional longer diagnostic (e.g. a Bluetooth scan result) published to MQTT
+    // once after startup. Empty = nothing to report.
+    virtual const char* diag() const { return ""; }
 };

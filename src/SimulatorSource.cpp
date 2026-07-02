@@ -1,4 +1,5 @@
 #include "SimulatorSource.h"
+#include "config.h"
 
 namespace {
 // Small helpers
@@ -122,5 +123,10 @@ bool SimulatorSource::read(TelemetrySnapshot& out) {
     out.intakeTempC    = clampf(22.f + _coolantTempC * 0.1f + frand(-1, 1), 10.f, 60.f);
     out.batteryVoltage = frand(14.0f, 14.4f);          // engine running = alternator charging
     out.fuelLevelPct   = _fuelLevelPct;
+
+    // MAF roughly scales with revs and load; idle ~3 g/s, hard pull ~40+ g/s.
+    out.mafGs       = clampf(3.0f + (out.rpm / 1000.0f) * (out.engineLoadPct / 100.0f) * 14.0f
+                             + frand(-0.3f, 0.3f), 1.5f, 60.0f);
+    out.fuelRateLph = fuelRateLphFromMaf(out.mafGs, FUEL_IS_DIESEL);
     return true;
 }

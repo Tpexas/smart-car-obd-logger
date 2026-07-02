@@ -19,6 +19,10 @@ void MqttPublisher::begin(const char* caCert) {
     }
     _client.setServer(_host, _port);
     _client.setBufferSize(512);   // headroom for the JSON payload
+    // Longer keepalive so brief Bluetooth-induced loop stalls don't drop the
+    // connection — reconnecting is expensive (and memory-starved) once BT is up.
+    _client.setKeepAlive(60);
+    _client.setSocketTimeout(10);
 }
 
 bool MqttPublisher::reconnect() {
@@ -79,11 +83,43 @@ bool MqttPublisher::publish(const TelemetrySnapshot& s) {
     doc["load"]     = round(s.engineLoadPct * 10) / 10.0;
     doc["voltage"]  = round(s.batteryVoltage * 100) / 100.0;
     doc["fuel"]     = round(s.fuelLevelPct * 10) / 10.0;
+    doc["maf"]      = round(s.mafGs * 100) / 100.0;
+    doc["fuel_rate"]= round(s.fuelRateLph * 100) / 100.0;
 
     char payload[512];
     size_t n = serializeJson(doc, payload, sizeof(payload));
 
     bool ok = _client.publish(_topic, (const uint8_t*)payload, n, false);
     Serial.printf("[MQTT] %s -> %s : %s\n", ok ? "pub" : "PUB-FAIL", _topic, payload);
+    return ok;
+}
+
+bool MqttPublisher::publishStatus(const char* state) {
+    if (!_client.connected() || !_statusTopic) return false;
+
+    JsonDocument doc;
+    doc["trip_id"] = _tripId;
+    doc["ts"]      = (uint64_t)time(nullptr) * 1000ULL;
+    doc["state"]   = state;
+
+    char payload[256];
+    size_t n = serializeJson(doc, payload, sizeof(payload));
+    bool ok = _client.publish(_statusTopic, (const uint8_t*)payload, n, true);   // retained
+    Serial.printf("[MQTT] status -> %s : %s\n", _statusTopic, payload);
+    return ok;
+}
+
+bool MqttPublisher::publishDiag(const char* text) {
+    if (!_client.connected()) return false;
+
+    JsonDocument doc;
+    doc["trip_id"] = _tripId;
+    doc["ts"]      = (uint64_t)time(nullptr) * 1000ULL;
+    doc["scan"]    = text;
+
+    char payload[512];
+    size_t n = serializeJson(doc, payload, sizeof(payload));
+    bool ok = _client.publish("smartcar/scan", (const uint8_t*)payload, n, true);   // own retained topic
+    Serial.printf("[MQTT] scan -> smartcar/scan : %s\n", payload);
     return ok;
 }

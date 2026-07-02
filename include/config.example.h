@@ -28,6 +28,17 @@
 // Set to 1 to skip TLS certificate verification (debug only). Leave 0 normally.
 #define MQTT_TLS_INSECURE       0
 
+// Status topic — device publishes connection/OBD state here (watch from phone).
+#define MQTT_STATUS_TOPIC       "smartcar/status"
+
+// ---- Telemetry source -------------------------------------------------------
+// 0 = simulator (no car needed), 1 = real ELM327 over Bluetooth.
+#define USE_ELM327           0
+#define OBD_BT_NAME          "OBDII"   // your ELM327's Bluetooth name
+#define OBD_BT_MAC           ""        // e.g. "1A:2B:3C:4D:5E:6F" — if set, connect by MAC; "" = by name
+#define OBD_BT_PIN           "1234"    // legacy pairing PIN for cheap ELM327 clones
+#define FUEL_IS_DIESEL       1         // 1 = diesel, 0 = petrol (fuel-from-MAF math)
+
 // ---- App --------------------------------------------------------------------
 #define DEVICE_ID            "car-01"
 #define PUBLISH_INTERVAL_MS  1000      // how often to publish a reading
