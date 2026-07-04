@@ -1,0 +1,221 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "tags": ["smartcar"],
+  "time": { "from": "now-30d", "to": "now" },
+  "title": "Smart Car — Trip Detail",
+  "uid": "smartcar-trip-detail",
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "trip",
+        "label": "Trip",
+        "type": "query",
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+        "query": "SELECT to_char(started_at,'YYYY-MM-DD HH24:MI') || '  ' || COALESCE(route,'') AS __text, trip_id AS __value FROM trips ORDER BY started_at DESC",
+        "refresh": 1,
+        "sort": 0,
+        "includeAll": false,
+        "multi": false,
+        "current": {},
+        "options": []
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Distance (km)",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT round(distance_km::numeric,1) AS value FROM trips WHERE trip_id = '$trip'",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Duration (min)",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT round(duration_s/60.0,1) AS value FROM trips WHERE trip_id = '$trip'",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Fuel used (L)",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT round(fuel_used_l::numeric,2) AS value FROM trips WHERE trip_id = '$trip'",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "yellow" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "L/100km",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT round(l_per_100km::numeric,1) AS value FROM trips WHERE trip_id = '$trip'",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "orange" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Max speed (km/h)",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT max_speed AS value FROM trips WHERE trip_id = '$trip'",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Weather",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT COALESCE(weather_desc,'—') || ', ' || COALESCE(weather_temp_c::text,'?') || '°C, wind ' || COALESCE(weather_wind_kph::text,'?') || ' km/h' AS value FROM trips WHERE trip_id = '$trip'",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": false }, "colorMode": "value", "graphMode": "none", "textMode": "value" }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Speed & RPM",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 4 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", speed AS \"Speed (km/h)\", rpm AS \"RPM\" FROM telemetry WHERE trip_id = '$trip' ORDER BY ts",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 12, "spanNulls": true, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "RPM" },
+            "properties": [
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "purple" } },
+              { "id": "custom.fillOpacity", "value": 0 }
+            ] },
+          { "matcher": { "id": "byName", "options": "Speed (km/h)" },
+            "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } } ] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Temperatures (°C)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", coolant AS \"Coolant\", intake AS \"Intake\" FROM telemetry WHERE trip_id = '$trip' ORDER BY ts",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "celsius", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "spanNulls": true, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Coolant" },
+            "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } } ] },
+          { "matcher": { "id": "byName", "options": "Intake" },
+            "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "light-blue" } } ] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Fuel rate (L/h) & MAF (g/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", fuel_rate AS \"Fuel (L/h)\", maf AS \"MAF (g/s)\" FROM telemetry WHERE trip_id = '$trip' ORDER BY ts",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "spanNulls": true, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Fuel (L/h)" },
+            "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } } ] },
+          { "matcher": { "id": "byName", "options": "MAF (g/s)" },
+            "properties": [
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }
+            ] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Throttle & engine load (%)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", throttle AS \"Throttle\", engine_load AS \"Load\" FROM telemetry WHERE trip_id = '$trip' ORDER BY ts",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "max": 100, "min": 0, "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "spanNulls": true, "showPoints": "never" } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Battery voltage (V)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", voltage AS \"Voltage\" FROM telemetry WHERE trip_id = '$trip' ORDER BY ts",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "volt", "decimals": 1, "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "spanNulls": true, "showPoints": "never" } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } }
+    }
+  ]
+}

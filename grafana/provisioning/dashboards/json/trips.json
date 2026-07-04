@@ -73,11 +73,23 @@
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
       "targets": [
         { "refId": "A", "format": "table", "editorMode": "code",
-          "rawSql": "SELECT started_at AS \"Start\", route AS \"Route\", duration_s AS \"Duration (s)\", round(distance_km::numeric,2) AS \"Distance (km)\", round(avg_speed::numeric,1) AS \"Avg (km/h)\", max_speed AS \"Max (km/h)\", round(fuel_used_l::numeric,2) AS \"Fuel (L)\", round(l_per_100km::numeric,1) AS \"L/100km\", round(avg_rpm::numeric,0) AS \"Avg RPM\", samples AS \"Samples\" FROM trips ORDER BY started_at DESC",
+          "rawSql": "SELECT started_at AS \"Start\", route AS \"Route\", duration_s AS \"Duration (s)\", round(distance_km::numeric,2) AS \"Distance (km)\", round(avg_speed::numeric,1) AS \"Avg (km/h)\", max_speed AS \"Max (km/h)\", round(fuel_used_l::numeric,2) AS \"Fuel (L)\", round(l_per_100km::numeric,1) AS \"L/100km\", round(avg_rpm::numeric,0) AS \"Avg RPM\", samples AS \"Samples\", trip_id, ((EXTRACT(EPOCH FROM started_at)*1000)::bigint - 60000) AS from_ms, ((EXTRACT(EPOCH FROM ended_at)*1000)::bigint + 60000) AS to_ms FROM trips ORDER BY started_at DESC",
           "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
       ],
       "options": { "showHeader": true },
-      "fieldConfig": { "defaults": {}, "overrides": [] }
+      "fieldConfig": { "defaults": {}, "overrides": [
+        { "matcher": { "id": "byName", "options": "Start" },
+          "properties": [ { "id": "links", "value": [
+            { "title": "Open trip detail",
+              "url": "/d/smartcar-trip-detail/smart-car-trip-detail?orgId=1&var-trip=${__data.fields.trip_id}&from=${__data.fields.from_ms}&to=${__data.fields.to_ms}" }
+          ] } ] },
+        { "matcher": { "id": "byName", "options": "trip_id" },
+          "properties": [ { "id": "custom.hidden", "value": true } ] },
+        { "matcher": { "id": "byName", "options": "from_ms" },
+          "properties": [ { "id": "custom.hidden", "value": true } ] },
+        { "matcher": { "id": "byName", "options": "to_ms" },
+          "properties": [ { "id": "custom.hidden", "value": true } ] }
+      ] }
     },
     {
       "id": 6,
