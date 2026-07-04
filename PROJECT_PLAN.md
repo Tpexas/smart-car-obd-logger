@@ -145,26 +145,29 @@ considered and declined — battery/background-reliability trade-offs).
 
 > **You can show:** a map of where you drove, per trip.
 
-### Phase 8 — Route & commute analysis (no GPS needed to start)
+### Phase 8 — Route & commute analysis (collection layer DONE ✅)
 Distinct routes have distinct distance signatures (route A ≈ 12.3 km, route B ≈ 14.1 km),
 so trips can be clustered by distance alone — GPS only needed for maps.
-- [ ] Add a `route` label to trips (auto-assign by distance bucket, editable)
-- [ ] Grafana: commute duration by route / by weekday / by departure time
-- [ ] Season/weather cross-analysis once Phase 6 fills weather columns
+- [x] `route` label auto-assigned at trip end (2 km distance bucket, e.g. `~26 km`);
+      manual renames survive re-summarize (COALESCE in the upsert)
+- [x] Grafana: route-averages table (trips, avg duration/distance/L-100km)
+- [ ] Duration by weekday / departure time — build after a few weeks of commutes
+- [ ] Season/weather cross-analysis (weather columns already filling per trip)
 
 > **You can show:** "route B is 4 min faster on average, but only in summer."
 
-### Phase 9 — Car health monitoring
+### Phase 9 — Car health monitoring (collection layer DONE ✅, trends need months)
 All derivable from data already collected (plus DTC codes, one new firmware read):
-- [ ] **Warm-up time**: minutes from start to coolant 80 °C, trended across trips —
-      creeping upward = thermostat/cooling degradation (classic early symptom)
-- [ ] **Battery health**: first voltage sample of each trip (engine-off resting V)
-      trended over months; charging voltage (running avg) for alternator health
-- [ ] **Idle signature drift**: avg idle RPM + idle fuel rate/MAF over time —
-      drift suggests air path / injector issues
-- [ ] **Fuel-economy trend on the same route** — the best single health proxy
-- [ ] **DTC trouble codes** (firmware: ELMduino can read stored/pending codes) —
+- [x] **Warm-up time** (`warmup_s`): trip start → coolant 80 °C, per trip + Grafana
+      trend — creeping upward = thermostat/cooling degradation (classic early symptom)
+- [x] **Battery health** (`start_voltage`): first voltage sample per trip + Grafana
+      trend; engine-off starts show true resting V (12.0 V baseline captured)
+- [x] **Idle fuel rate** (`idle_fuel_lph`): avg fuel at idle per trip — drift
+      suggests air path / injector issues (values valid after the fuel-accuracy fix)
+- [ ] **Fuel-economy trend on the same route** — query once real trips accumulate
+- [ ] **DTC trouble codes** (firmware; do AFTER the fuel fix is verified) —
       publish to MQTT, alert via n8n when the car logs a new code
+- Note: trend verdicts need **months** of trips — the point of shipping collection now
 
 > **You can show:** "my dashboard warned the thermostat was dying before the car did."
 

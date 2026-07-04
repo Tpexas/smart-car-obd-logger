@@ -38,6 +38,11 @@ CREATE TABLE IF NOT EXISTS trips (
   samples          INTEGER,
   fuel_used_l      REAL,      -- litres used this trip (integral of fuel_rate)
   l_per_100km      REAL,      -- fuel economy
+  route            TEXT,      -- auto: distance bucket ('~26 km'); rename freely,
+                              -- manual names survive re-summarize (COALESCE upsert)
+  warmup_s         INTEGER,   -- seconds from trip start to coolant 80 °C (health)
+  start_voltage    REAL,      -- first voltage sample; engine-off trips = resting battery V
+  idle_fuel_lph    REAL,      -- avg fuel rate at idle (speed<2, rpm 500-1100) (health)
   weather_temp_c   REAL,      -- (Phase 6, n8n)
   weather_wind_kph REAL,
   weather_desc     TEXT,

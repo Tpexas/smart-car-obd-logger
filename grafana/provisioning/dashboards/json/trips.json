@@ -73,7 +73,7 @@
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
       "targets": [
         { "refId": "A", "format": "table", "editorMode": "code",
-          "rawSql": "SELECT started_at AS \"Start\", duration_s AS \"Duration (s)\", round(distance_km::numeric,2) AS \"Distance (km)\", round(avg_speed::numeric,1) AS \"Avg (km/h)\", max_speed AS \"Max (km/h)\", round(fuel_used_l::numeric,2) AS \"Fuel (L)\", round(l_per_100km::numeric,1) AS \"L/100km\", round(avg_rpm::numeric,0) AS \"Avg RPM\", samples AS \"Samples\" FROM trips ORDER BY started_at DESC",
+          "rawSql": "SELECT started_at AS \"Start\", route AS \"Route\", duration_s AS \"Duration (s)\", round(distance_km::numeric,2) AS \"Distance (km)\", round(avg_speed::numeric,1) AS \"Avg (km/h)\", max_speed AS \"Max (km/h)\", round(fuel_used_l::numeric,2) AS \"Fuel (L)\", round(l_per_100km::numeric,1) AS \"L/100km\", round(avg_rpm::numeric,0) AS \"Avg RPM\", samples AS \"Samples\" FROM trips ORDER BY started_at DESC",
           "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
       ],
       "options": { "showHeader": true },
@@ -134,6 +134,48 @@
       ],
       "options": { "xField": "trip", "orientation": "auto", "showValue": "auto", "stacking": "none" },
       "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "orange" }, "custom": { "lineWidth": 1, "fillOpacity": 80 } }, "overrides": [] }
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Route averages (commute comparison)",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 29 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT route AS \"Route\", count(*) AS \"Trips\", round(avg(duration_s)/60.0, 1) AS \"Avg (min)\", round(avg(distance_km)::numeric, 1) AS \"Avg km\", round(avg(l_per_100km)::numeric, 1) AS \"Avg L/100km\" FROM trips WHERE route IS NOT NULL AND route <> 'short' GROUP BY route ORDER BY count(*) DESC",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "options": { "showHeader": true },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "id": 11,
+      "type": "barchart",
+      "title": "Warm-up time to 80°C (s) — rising trend = check thermostat",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 29 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT to_char(started_at,'MM-DD HH24:MI') AS trip, warmup_s AS \"Warm-up (s)\" FROM trips WHERE warmup_s IS NOT NULL ORDER BY started_at",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "options": { "xField": "trip", "orientation": "auto", "showValue": "auto", "stacking": "none" },
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "fixed", "fixedColor": "red" }, "custom": { "lineWidth": 1, "fillOpacity": 80 } }, "overrides": [] }
+    },
+    {
+      "id": 12,
+      "type": "barchart",
+      "title": "Start voltage (V) — engine-off trips = battery health",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 29 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT to_char(started_at,'MM-DD HH24:MI') AS trip, start_voltage AS \"Start V\" FROM trips WHERE start_voltage IS NOT NULL ORDER BY started_at",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "options": { "xField": "trip", "orientation": "auto", "showValue": "auto", "stacking": "none" },
+      "fieldConfig": { "defaults": { "unit": "volt", "decimals": 1, "color": { "mode": "fixed", "fixedColor": "blue" }, "custom": { "lineWidth": 1, "fillOpacity": 80 } }, "overrides": [] }
     }
   ]
 }
