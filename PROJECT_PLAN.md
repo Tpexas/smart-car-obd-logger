@@ -122,10 +122,14 @@ The big payoff. Plugging in the car now produces real OBD data.
 
 ## Bonus phases (do only if still having fun — zero guilt if you skip)
 
-### Phase 6 — Weather correlation (n8n) (~half day)
-- [ ] n8n: at trip end, fetch **Open-Meteo** (free, no key) for the trip's
-      time/location, write wind/temp/pressure into the `trips` row
-- [ ] Grafana: scatter fuel/economy vs headwind, temp, etc.
+### Phase 6 — Weather correlation (n8n) (DONE ✅)
+- [x] n8n webhook workflow (`n8n/trip-weather-workflow.json`): fetches **Open-Meteo**
+      current weather (Kretinga–Klaipėda midpoint 55.80, 21.19 — towns are ~25 km
+      apart, meteorologically identical; GPS would add nothing for weather)
+- [x] Node-RED: at trip end → n8n webhook → temp/wind/desc written into the `trips` row
+      (verified end-to-end against the first real trip)
+- [ ] Grafana: scatter fuel/economy vs wind, temp — build once a few real trips
+      with correct fuel numbers accumulate
 
 > **You can show:** "does cold/wind hurt my MPG?" — a genuine insight.
 
@@ -136,7 +140,30 @@ The big payoff. Plugging in the car now produces real OBD data.
 
 > **You can show:** a map of where you drove, per trip.
 
-### Phase 8 — Polish & extras
+### Phase 8 — Route & commute analysis (no GPS needed to start)
+Distinct routes have distinct distance signatures (route A ≈ 12.3 km, route B ≈ 14.1 km),
+so trips can be clustered by distance alone — GPS only needed for maps.
+- [ ] Add a `route` label to trips (auto-assign by distance bucket, editable)
+- [ ] Grafana: commute duration by route / by weekday / by departure time
+- [ ] Season/weather cross-analysis once Phase 6 fills weather columns
+
+> **You can show:** "route B is 4 min faster on average, but only in summer."
+
+### Phase 9 — Car health monitoring
+All derivable from data already collected (plus DTC codes, one new firmware read):
+- [ ] **Warm-up time**: minutes from start to coolant 80 °C, trended across trips —
+      creeping upward = thermostat/cooling degradation (classic early symptom)
+- [ ] **Battery health**: first voltage sample of each trip (engine-off resting V)
+      trended over months; charging voltage (running avg) for alternator health
+- [ ] **Idle signature drift**: avg idle RPM + idle fuel rate/MAF over time —
+      drift suggests air path / injector issues
+- [ ] **Fuel-economy trend on the same route** — the best single health proxy
+- [ ] **DTC trouble codes** (firmware: ELMduino can read stored/pending codes) —
+      publish to MQTT, alert via n8n when the car logs a new code
+
+> **You can show:** "my dashboard warned the thermostat was dying before the car did."
+
+### Phase 10 — Polish & extras
 - [ ] Trip auto-naming, a "trip detail" dashboard, anomaly flags (overheating, low
       voltage), email/Telegram alert via n8n on a bad reading
 - [ ] Final portfolio writeup: architecture diagram, the story, screenshots, lessons

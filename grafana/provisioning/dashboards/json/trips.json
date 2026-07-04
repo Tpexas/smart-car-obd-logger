@@ -73,7 +73,7 @@
       "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
       "targets": [
         { "refId": "A", "format": "table", "editorMode": "code",
-          "rawSql": "SELECT started_at AS \"Start\", duration_s AS \"Duration (s)\", round(distance_km::numeric,2) AS \"Distance (km)\", round(avg_speed::numeric,1) AS \"Avg (km/h)\", max_speed AS \"Max (km/h)\", round(avg_rpm::numeric,0) AS \"Avg RPM\", samples AS \"Samples\" FROM trips ORDER BY started_at DESC",
+          "rawSql": "SELECT started_at AS \"Start\", duration_s AS \"Duration (s)\", round(distance_km::numeric,2) AS \"Distance (km)\", round(avg_speed::numeric,1) AS \"Avg (km/h)\", max_speed AS \"Max (km/h)\", round(fuel_used_l::numeric,2) AS \"Fuel (L)\", round(l_per_100km::numeric,1) AS \"L/100km\", round(avg_rpm::numeric,0) AS \"Avg RPM\", samples AS \"Samples\" FROM trips ORDER BY started_at DESC",
           "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
       ],
       "options": { "showHeader": true },
@@ -106,6 +106,34 @@
       ],
       "options": { "xField": "trip", "orientation": "auto", "showValue": "auto", "stacking": "none" },
       "fieldConfig": { "defaults": { "custom": { "lineWidth": 1, "fillOpacity": 80 } }, "overrides": [] }
+    },
+    {
+      "id": 8,
+      "type": "barchart",
+      "title": "Fuel used per trip (L)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT to_char(started_at,'MM-DD HH24:MI') AS trip, round(fuel_used_l::numeric,2) AS \"Fuel (L)\" FROM trips WHERE fuel_used_l IS NOT NULL ORDER BY started_at",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "options": { "xField": "trip", "orientation": "auto", "showValue": "auto", "stacking": "none" },
+      "fieldConfig": { "defaults": { "unit": "litre", "color": { "mode": "fixed", "fixedColor": "yellow" }, "custom": { "lineWidth": 1, "fillOpacity": 80 } }, "overrides": [] }
+    },
+    {
+      "id": 9,
+      "type": "barchart",
+      "title": "Fuel economy per trip (L/100km)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "table", "editorMode": "code",
+          "rawSql": "SELECT to_char(started_at,'MM-DD HH24:MI') AS trip, round(l_per_100km::numeric,1) AS \"L/100km\" FROM trips WHERE l_per_100km IS NOT NULL ORDER BY started_at",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "options": { "xField": "trip", "orientation": "auto", "showValue": "auto", "stacking": "none" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "orange" }, "custom": { "lineWidth": 1, "fillOpacity": 80 } }, "overrides": [] }
     }
   ]
 }

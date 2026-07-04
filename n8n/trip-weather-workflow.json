@@ -1,0 +1,48 @@
+{
+ "id": "SmartCarWeather1",
+ "name": "Trip Weather (smart-car)",
+ "nodes": [
+  {
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "trip-weather",
+    "responseMode": "responseNode",
+    "options": {}
+   },
+   "id": "aaaa1111-0000-4000-8000-000000000001",
+   "name": "Webhook",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [0, 0],
+   "webhookId": "smartcar-trip-weather"
+  },
+  {
+   "parameters": {
+    "url": "https://api.open-meteo.com/v1/forecast?latitude=55.80&longitude=21.19&current=temperature_2m,wind_speed_10m,weather_code&timezone=auto",
+    "options": {}
+   },
+   "id": "aaaa1111-0000-4000-8000-000000000002",
+   "name": "Fetch weather",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [220, 0]
+  },
+  {
+   "parameters": {
+    "respondWith": "firstIncomingItem",
+    "options": {}
+   },
+   "id": "aaaa1111-0000-4000-8000-000000000003",
+   "name": "Respond",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.1,
+   "position": [440, 0]
+  }
+ ],
+ "connections": {
+  "Webhook":       { "main": [[{ "node": "Fetch weather", "type": "main", "index": 0 }]] },
+  "Fetch weather": { "main": [[{ "node": "Respond",       "type": "main", "index": 0 }]] }
+ },
+ "settings": {},
+ "active": true
+}
