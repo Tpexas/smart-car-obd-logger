@@ -92,8 +92,12 @@ The big payoff. Plugging in the car now produces real OBD data.
 - [x] BT + WiFi + TLS coexistence handled (MQTT-first startup, BLE mem release,
       self-heal reboot with trip_id preserved in RTC) — stable in driveway test
 - [x] Verified end-to-end: `obd-ready` + real telemetry in Postgres (engine off: rpm/speed 0, 12 V)
-- [ ] **Drive one real trip with the engine running** → capture live RPM/speed/MAF/fuel
-- [ ] Store fuel per trip: add `maf`/`fuel_rate` columns + trip fuel-total aggregation
+- [x] **Drive one real trip with the engine running** — 26 km / 28 min logged with
+      ZERO data gaps (1433 samples); trip summary + fuel columns computed
+- [x] Store fuel per trip: `maf`/`fuel_rate` columns + `fuel_used_l`/`l_per_100km` aggregation
+- [ ] **Fuel accuracy fix** (found on first real drive): PID polling desync froze MAF,
+      and fixed-AFR MAF math overestimates diesel fuel → switched to PID 015E (direct
+      fuel rate) with load-corrected MAF fallback. Needs one more drive to verify.
 - [ ] Power: 12V→5V buck off the OBD port (or USB power bank for now)
 
 > **You can show:** your *actual car's* data in the dashboard. The "it really works"

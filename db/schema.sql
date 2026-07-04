@@ -14,7 +14,9 @@ CREATE TABLE IF NOT EXISTS telemetry (
   throttle    REAL,
   engine_load REAL,
   voltage     REAL,
-  fuel        REAL
+  fuel        REAL,
+  maf         REAL,   -- mass air flow, g/s
+  fuel_rate   REAL    -- instantaneous fuel rate, L/h (from MAF)
 );
 CREATE INDEX IF NOT EXISTS idx_telemetry_trip ON telemetry(trip_id);
 CREATE INDEX IF NOT EXISTS idx_telemetry_ts   ON telemetry(ts);
@@ -34,6 +36,8 @@ CREATE TABLE IF NOT EXISTS trips (
   max_coolant      REAL,
   min_voltage      REAL,
   samples          INTEGER,
+  fuel_used_l      REAL,      -- litres used this trip (integral of fuel_rate)
+  l_per_100km      REAL,      -- fuel economy
   weather_temp_c   REAL,      -- (Phase 6, n8n)
   weather_wind_kph REAL,
   weather_desc     TEXT,
