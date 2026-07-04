@@ -1,90 +1,124 @@
-# Smart Car — OBD-II Telemetry
+# Smart Car — OBD-II Trip Logger
 
-ESP32 firmware that reads a car's OBD-II data and streams it over MQTT to a
-self-hosted dashboard (ThingsBoard). Built to run **without the car** first:
-a simulator generates realistic telemetry so the whole device → cloud pipeline
-can be developed and demoed from a desk.
+An end-to-end car **trip logger**: an ESP32 reads live OBD-II data from the car
+over Bluetooth, streams it through the phone's 4G hotspot to a self-hosted
+IoT stack, and every trip becomes a row of history — distance, speed, fuel
+consumption, and the weather it was driven in. Verified on a real car.
 
 ```
-ELM327 (Bluetooth)            ESP32                  Phone hotspot (4G)        VPS
-   [later]  ───BT-SPP──►  ┌──────────────┐  ──WiFi──►   ───────────►   ┌──────────────┐
-                          │ TelemetrySrc │                              │  MQTT broker │
-   Simulator ──────────►  │   → MQTT     │                              │  → Node-RED  │
-   [now]                  └──────────────┘                              │  → ThingsBd  │
-                                                                        └──────────────┘
+       CAR                    ESP32 (WROOM-32)           phone hotspot (4G)
+ ┌────────────┐   BT Classic  ┌────────────────┐   WiFi ┌──────────────────────────────┐
+ │   ELM327   │──────SPP─────►│ ELM327Source   │──TLS──►│  VPS (Docker)                │
+ │ (OBD port) │               │  or Simulator  │  8883  │                              │
+ └────────────┘               │  → MQTT/JSON   │        │  Mosquitto (MQTT broker)     │
+                              └────────────────┘        │    ├─► Node-RED              │
+   Simulator = same interface, no car needed            │    │    ├─► ThingsBoard      │
+                                                        │    │    │   (live gauges)    │
+                                                        │    │    └─► PostgreSQL       │
+                                                        │    │        telemetry + trips│
+                                                        │    └ trip end ─► n8n webhook │
+                                                        │                └► Open-Meteo │
+                                                        │  Grafana ◄── PostgreSQL      │
+                                                        │  (trip comparison dashboard) │
+                                                        └──────────────────────────────┘
 ```
 
-## Dashboard
+## What it does
 
-Live ThingsBoard dashboard driven by the simulator — gauges for RPM, speed,
-coolant, voltage and fuel, plus a time-series chart showing the simulated drive
-cycle (idle → accelerate → cruise → decelerate).
+- **Live telemetry** (1 Hz): RPM, speed, coolant/intake temps, throttle, engine
+  load, battery voltage, fuel level, MAF, fuel rate → ThingsBoard gauges
+- **Trip logging**: each power-on is a trip; at trip end Node-RED computes a
+  summary row — duration, distance (∫speed), avg/max speed & RPM,
+  **fuel used and L/100km** (∫fuel rate)
+- **Weather enrichment**: at trip end, n8n fetches Open-Meteo and stamps the trip
+  with temperature, wind, and conditions — enabling "does winter hurt my fuel
+  economy?" analysis
+- **Trip comparison**: Grafana dashboard (auto-provisioned from this repo) with
+  totals, a trips table, and per-trip distance/speed/fuel charts
+
+## Dashboards
+
+Live ThingsBoard gauges (driven by the simulator here — same pipeline as the car):
 
 ![Smart Car dashboard](docs/dashboard.png)
 
-## Trip analysis (Grafana)
-
-Per-trip summaries land in a Postgres `trips` table (one row per trip, computed by
-Node-RED at trip end). Grafana — auto-provisioned from
-[grafana/provisioning/](grafana/provisioning/) — visualizes them: totals, a trips
-table, and bar charts comparing distance and speed across trips.
+Grafana trip comparison, one row per trip:
 
 ![Grafana trips dashboard](docs/grafana.png)
 
-## Why the abstraction
+## Design notes
 
-The firmware programs against [`ITelemetrySource`](include/ITelemetrySource.h).
-Today the concrete source is [`SimulatorSource`](src/SimulatorSource.cpp).
-When the car is available, add an `ELM327Source` that implements the same
-interface and change **one line** in [`main.cpp`](src/main.cpp) — the WiFi, MQTT,
-JSON, and dashboards are untouched.
+**Swappable data source.** The firmware programs against
+[`ITelemetrySource`](include/ITelemetrySource.h); the concrete source is either
+[`SimulatorSource`](src/SimulatorSource.cpp) (realistic drive-cycle generator —
+the entire pipeline was built and demoed before ever touching the car) or
+[`ELM327Source`](src/ELM327Source.cpp) (real OBD via Bluetooth Classic +
+[ELMduino](https://github.com/PowerBroker2/ELMduino)). One `config.h` flag flips
+between them; nothing downstream knows the difference.
+
+**Coexistence on a small chip.** Bluetooth Classic + WiFi + TLS barely fit in the
+ESP32's RAM. The firmware connects MQTT *before* starting Bluetooth (a full TLS
+handshake needs contiguous heap that no longer exists once BT is up), releases
+the unused BLE stack, and — if MQTT is ever stuck after a link drop — reboots to
+recover, preserving the trip ID in RTC memory so the drive stays one trip.
+
+**Diesel fuel math.** Fuel comes from PID 015E (direct fuel rate) when the car
+supports it. The MAF fallback does *not* assume stoichiometric AFR — diesels run
+lean (AFR ~15–80 depending on load), so AFR is estimated from engine load.
+
+**Remote diagnostics.** The device publishes its state (`obd-ready`,
+`bt-connect-failed`, …) and Bluetooth scan results to retained MQTT topics —
+every in-car failure was debugged from a desk, no laptop in the car.
+
+## Repo layout
+
+| Path | What |
+|---|---|
+| `src/`, `include/` | ESP32 firmware (PlatformIO, Arduino framework) |
+| `db/schema.sql` | PostgreSQL schema: raw `telemetry` + per-trip `trips` |
+| `nodered/trip-logger-flow.json` | Node-RED flow: ingest → Postgres, trip-end summary, weather |
+| `n8n/trip-weather-workflow.json` | n8n webhook → Open-Meteo weather service |
+| `grafana/provisioning/` | Auto-provisioned datasource + trips dashboard |
+| `PROJECT_PLAN.md` | Phased roadmap with status |
 
 ## Hardware
 
-- ESP32 WROOM-32 dev board (Bluetooth Classic — needed for cheap ELM327 dongles)
-- *(later)* ELM327 Bluetooth OBD-II adapter
-- *(in-car later)* 12V→5V buck converter off the OBD port
+- ESP32 **WROOM-32** dev board (must be the original chip — Bluetooth Classic;
+  S2/S3/C3 are BLE-only and cannot talk to cheap ELM327 dongles)
+- ELM327 Bluetooth OBD-II adapter (connect by MAC + PIN `1234`)
+- Power: USB power bank / car USB (12V→5V buck off the OBD port planned)
+- *(planned)* u-blox NEO-6M/M8N GPS module for route maps
 
 ## Build & flash (PlatformIO)
 
-1. Copy the config template and fill in your values:
-   ```
-   cp include/config.example.h include/config.h
-   ```
-   `config.h` is git-ignored, so your WiFi/MQTT secrets stay off the repo.
-
-2. Build & upload (VS Code PlatformIO toolbar, or CLI):
-   ```
-   pio run -t upload
-   pio device monitor
-   ```
-
-## Where to send the data
-
-The firmware publishes flat JSON like:
-
-```json
-{"rpm":1840,"speed":42.3,"coolant":88.1,"intake":31.2,
- "throttle":24.0,"load":35.1,"voltage":14.21,"fuel":74.6}
+```
+cp include/config.example.h include/config.h   # then fill in your values
+pio run -t upload
+pio device monitor
 ```
 
-Two ways to point it at your server (set in `config.h`):
+`config.h` (git-ignored) holds WiFi, MQTT credentials, the ELM327 MAC/PIN, and
+the `USE_ELM327` simulator/real switch. The payload is flat JSON on
+`smartcar/telemetry`:
 
-| Target | `MQTT_USERNAME` | `MQTT_PASSWORD` | `MQTT_TELEMETRY_TOPIC` |
-|---|---|---|---|
-| **ThingsBoard direct** (fastest to a dashboard) | device access token | *(empty)* | `v1/devices/me/telemetry` |
-| **Your own Mosquitto** (then bridge via Node-RED) | broker user | broker pass | `smartcar/telemetry` |
+```json
+{"trip_id":"trip-1783051504","ts":1783051519000,"rpm":1840,"speed":42.3,
+ "coolant":88.1,"intake":31.2,"throttle":24.0,"load":35.1,"voltage":14.21,
+ "fuel":74.6,"maf":12.4,"fuel_rate":2.31}
+```
 
-## Roadmap
+## Security
 
-- [x] Simulator source + MQTT publishing
-- [ ] ThingsBoard device + dashboard (gauges + time-series)
-- [ ] Node-RED transform/bridge (optional)
-- [ ] `ELM327Source` — real OBD over Bluetooth Classic
-- [ ] In-car power + deep sleep when ignition off
+- MQTT is TLS-only on the internet (Let's Encrypt, port 8883, password auth);
+  plain 1883 is loopback-only on the VPS
+- The firmware pins Let's Encrypt **roots** (not the leaf), so cert renewals
+  need no firmware update; NTP sync before the first handshake
+- Grafana/Postgres/Node-RED are not exposed publicly (SSH tunnel / loopback)
+- All credentials live in git-ignored local files
 
-## Security note
+## Status & roadmap
 
-Don't expose MQTT (1883) to the internet unauthenticated. Use a broker
-username/password and TLS (8883), or keep the broker behind the VPS firewall and
-tunnel to it. The simulator/dev setup uses plain MQTT for convenience only.
+Working end-to-end on a real car (diesel): trips log with zero data gaps,
+fuel-accuracy fix awaiting road verification. Next: GPS route maps, commute/route
+analysis, car-health trends (warm-up time, battery voltage, idle drift, DTC
+alerts). Full plan in [PROJECT_PLAN.md](PROJECT_PLAN.md).

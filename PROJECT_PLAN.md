@@ -133,10 +133,15 @@ The big payoff. Plugging in the car now produces real OBD data.
 
 > **You can show:** "does cold/wind hurt my MPG?" — a genuine insight.
 
-### Phase 7 — GPS + route maps (~1 day + ~$5 module)
-- [ ] Add a NEO-6M/M8N GPS module (UART), log lat/lon per record
-- [ ] ThingsBoard/Grafana **map** of each route
-- [ ] Per-location weather instead of a single city point
+### Phase 7 — GPS + route maps (WAITING on hardware 📦)
+Decision (2026-07-04): use a dedicated GPS module, not phone GPS (OwnTracks was
+considered and declined — battery/background-reliability trade-offs).
+- [ ] **Order:** u-blox NEO-6M ("GY-GPS6MV2") or NEO-M8N board with ceramic
+      antenna, UART interface, ~€5–8
+- [ ] Wire to ESP32 UART2 (VCC/GND/TX→RX2, RX→TX2), TinyGPS++ in firmware,
+      lat/lon in the payload + `gps_points` table
+- [ ] Grafana **geomap** route per trip; ThingsBoard map widget
+- [ ] Per-location weather instead of the fixed midpoint (marginal gain here)
 
 > **You can show:** a map of where you drove, per trip.
 
