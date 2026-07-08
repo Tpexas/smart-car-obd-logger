@@ -46,6 +46,11 @@ Grafana trip comparison, one row per trip:
 
 ![Grafana trips dashboard](docs/grafana.png)
 
+Per-trip deep-dive — second-by-second replay of a single drive (speed/RPM,
+temperatures, fuel rate, cumulative fuel, throttle/load, voltage):
+
+![Grafana trip detail](docs/trip_detail.png)
+
 ## Design notes
 
 **Swappable data source.** The firmware programs against
