@@ -1,8 +1,5 @@
 # I turned my diesel into a database: building an OBD-II trip logger with an ESP32
 
-*Draft — publish after the fuel verification drive. Placeholders marked `[TODO]`.*
-
----
 
 Every trip my car makes now ends as a row in a database: distance, duration, fuel
 burned, average speed, engine warm-up time, battery voltage — and the weather it
@@ -151,9 +148,14 @@ petrol math overestimates fuel severalfold at light load. The fix: read PID
 015E (direct engine fuel rate) where the car supports it, and fall back to a
 load-corrected AFR model only when it doesn't.
 
-`[TODO after verification drive: the corrected numbers, compared against the
-phone app — and eventually against actual litres pumped at the fuel station,
-which is the ground truth no software can argue with.]`
+With both bugs fixed, I drove two ordinary commutes. The result: **4.3 and
+4.4 L/100km** across two 25 km trips — down from the buggy 12.4, and consistent
+with each other to within a tenth. The MAF sensor, previously frozen at five
+distinct readings, now varies across ~880 distinct values per trip, tracking
+every acceleration. Idle fuel rate settled at **0.5–0.65 L/h**, exactly where a
+warm diesel idles. My car doesn't expose a direct fuel-rate PID, so these come
+from the load-corrected MAF model — the ultimate cross-check, summing computed
+litres against what the pump actually dispenses over a few tanks, is on the list.
 
 ## What it answers now
 
@@ -172,8 +174,8 @@ With the collection layer done, every drive feeds the analytics for free:
 - **Weather × everything:** every trip carries temperature, wind and conditions,
   so "what does -10°C do to my consumption" becomes a SQL query.
 
-`[SCREENSHOT: trips dashboard with real commutes]`
-`[SCREENSHOT: trip detail — the second-by-second replay of one drive]`
+*(Dashboard screenshots coming soon — the full code, schema, flows and Grafana
+dashboards are on GitHub, linked below.)*
 
 ## Lessons that transfer
 
