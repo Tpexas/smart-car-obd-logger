@@ -216,6 +216,23 @@
         "overrides": []
       },
       "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Cumulative fuel this trip (L) — steep = burning hard, flat = idle/coast",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 29 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", SUM(fuel_rate * dt_h) OVER (ORDER BY ts) AS \"Cumulative fuel (L)\" FROM (SELECT ts, fuel_rate, COALESCE(EXTRACT(EPOCH FROM (ts - LAG(ts) OVER (ORDER BY ts)))/3600.0, 0) AS dt_h FROM telemetry WHERE trip_id = '$trip') q ORDER BY ts",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "decimals": 2, "color": { "mode": "fixed", "fixedColor": "yellow" }, "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 25, "spanNulls": true, "showPoints": "never" } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
     }
   ]
 }
