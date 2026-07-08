@@ -25,11 +25,13 @@ public:
 private:
     bool connectBt();
     void scanForDevices();   // inquiry scan → fills _diag (names + MACs)
-    // Polls one ELMduino PID call until it completes (non-blocking lib, bounded wait).
-    // Templated because ELMduino getters return mixed types (e.g. kph() is int32_t,
-    // rpm() is float) — accept any return type and store it as float.
+    // Polls one ELMduino PID call until it reaches a FINAL state (success or error).
+    // ELMduino is non-blocking: abandoning a query mid-flight desyncs the response
+    // stream and freezes values (root cause of the stuck MAF on the first real
+    // drive) — so we never abandon; ELMduino's own 2s timeout bounds the wait.
+    // Templated because ELMduino getters return mixed types (kph() int32_t, rpm() float).
     template <typename T>
-    bool queryPid(T (ELM327::*fn)(), float& out, uint32_t timeoutMs = 250);
+    bool queryPid(T (ELM327::*fn)(), float& out, uint32_t timeoutMs = 2500);
 
     BluetoothSerial   _serialBT;
     ELM327            _elm;
@@ -43,4 +45,11 @@ private:
     String            _diag;
     TelemetrySnapshot _last;
     uint32_t          _lastConnectAttempt = 0;
+
+    // Fuel source: prefer direct engine fuel rate (PID 015E — correct for diesels,
+    // no model needed). Probe it a few times at startup; if the car never answers,
+    // fall back to the MAF estimate permanently.
+    bool    _useFuelRatePid   = false;
+    int8_t  _fuelProbesLeft   = 5;
+    uint8_t _cycle            = 0;   // rotates the secondary PIDs, one per read()
 };

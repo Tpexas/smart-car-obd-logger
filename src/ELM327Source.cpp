@@ -93,14 +93,18 @@ bool ELM327Source::begin() {
 
 template <typename T>
 bool ELM327Source::queryPid(T (ELM327::*fn)(), float& out, uint32_t timeoutMs) {
+    // Keep calling the SAME getter until ELMduino reports a final state. Never
+    // abandon mid-query: that leaves the reply in the BT buffer and the next PID
+    // reads it as its own answer → frozen/garbage values. ELMduino's internal 2s
+    // timeout resolves a dead query; timeoutMs is only a safety net above that.
     uint32_t start = millis();
-    while (millis() - start < timeoutMs) {
+    for (;;) {
         T v = (_elm.*fn)();
         if (_elm.nb_rx_state == ELM_SUCCESS)     { out = (float)v; return true; }
-        if (_elm.nb_rx_state != ELM_GETTING_MSG) { return false; }   // PID not supported / error
+        if (_elm.nb_rx_state != ELM_GETTING_MSG) { return false; }   // PID unsupported / error
+        if (millis() - start > timeoutMs)        { return false; }   // BT likely dead
         delay(2);
     }
-    return false;   // timed out this cycle (keeps previous value)
 }
 
 bool ELM327Source::read(TelemetrySnapshot& out) {
@@ -117,23 +121,45 @@ bool ELM327Source::read(TelemetrySnapshot& out) {
 
     out = _last;   // keep last-known values for any PID that doesn't answer this cycle
 
-    queryPid(&ELM327::rpm,               out.rpm);
-    queryPid(&ELM327::kph,               out.speedKph);
-    queryPid(&ELM327::engineCoolantTemp, out.coolantTempC);
-    queryPid(&ELM327::intakeAirTemp,     out.intakeTempC);
-    queryPid(&ELM327::throttle,          out.throttlePct);
-    queryPid(&ELM327::engineLoad,        out.engineLoadPct);
-    queryPid(&ELM327::batteryVoltage,    out.batteryVoltage);
-    queryPid(&ELM327::fuelLevel,         out.fuelLevelPct);
+    // Every cycle: the signals we integrate per-trip (distance & fuel) plus RPM.
+    queryPid(&ELM327::rpm, out.rpm);
+    queryPid(&ELM327::kph, out.speedKph);
 
-    float maf;
-    if (queryPid(&ELM327::mafRate, maf)) {
-        out.mafGs       = maf;
-        out.fuelRateLph = fuelRateLphFromMaf(maf, _diesel);
+    // Fuel — prefer PID 015E (direct L/h, correct for diesel). Probe a few times
+    // at startup; fall back to the MAF+load estimate if the car never answers.
+    if (_useFuelRatePid || _fuelProbesLeft > 0) {
+        float fr;
+        if (queryPid(&ELM327::fuelRate, fr)) {
+            _useFuelRatePid = true;
+            _fuelProbesLeft = 0;
+            out.fuelRateLph = fr;
+        } else if (!_useFuelRatePid) {
+            _fuelProbesLeft--;
+        }
+    }
+    if (!_useFuelRatePid && _fuelProbesLeft <= 0) {
+        // MAF fallback needs engine load fresh (the diesel AFR model scales with it).
+        queryPid(&ELM327::engineLoad, out.engineLoadPct);
+        float maf;
+        if (queryPid(&ELM327::mafRate, maf)) {
+            out.mafGs       = maf;
+            out.fuelRateLph = fuelRateLphFromMaf(maf, _diesel, out.engineLoadPct);
+        }
+    }
+
+    // Secondary PIDs change slowly — rotate one per cycle to keep each read()
+    // fast (a full every-PID sweep was pushing past the 1 Hz publish budget).
+    switch (_cycle++ % 6) {
+        case 0: queryPid(&ELM327::engineCoolantTemp, out.coolantTempC);   break;
+        case 1: queryPid(&ELM327::intakeAirTemp,     out.intakeTempC);    break;
+        case 2: queryPid(&ELM327::throttle,          out.throttlePct);    break;
+        case 3: queryPid(&ELM327::engineLoad,        out.engineLoadPct);  break;
+        case 4: queryPid(&ELM327::batteryVoltage,    out.batteryVoltage); break;
+        case 5: queryPid(&ELM327::fuelLevel,         out.fuelLevelPct);   break;
     }
 
     out.timestampMs = millis();
     _last = out;
-    _status = "obd-ready";
+    _status = _useFuelRatePid ? "obd-ready(fuel-pid)" : "obd-ready(maf-est)";
     return true;
 }

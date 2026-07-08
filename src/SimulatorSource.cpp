@@ -127,6 +127,6 @@ bool SimulatorSource::read(TelemetrySnapshot& out) {
     // MAF roughly scales with revs and load; idle ~3 g/s, hard pull ~40+ g/s.
     out.mafGs       = clampf(3.0f + (out.rpm / 1000.0f) * (out.engineLoadPct / 100.0f) * 14.0f
                              + frand(-0.3f, 0.3f), 1.5f, 60.0f);
-    out.fuelRateLph = fuelRateLphFromMaf(out.mafGs, FUEL_IS_DIESEL);
+    out.fuelRateLph = fuelRateLphFromMaf(out.mafGs, FUEL_IS_DIESEL, out.engineLoadPct);
     return true;
 }

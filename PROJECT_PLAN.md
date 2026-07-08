@@ -95,9 +95,11 @@ The big payoff. Plugging in the car now produces real OBD data.
 - [x] **Drive one real trip with the engine running** — 26 km / 28 min logged with
       ZERO data gaps (1433 samples); trip summary + fuel columns computed
 - [x] Store fuel per trip: `maf`/`fuel_rate` columns + `fuel_used_l`/`l_per_100km` aggregation
-- [ ] **Fuel accuracy fix** (found on first real drive): PID polling desync froze MAF,
-      and fixed-AFR MAF math overestimates diesel fuel → switched to PID 015E (direct
-      fuel rate) with load-corrected MAF fallback. Needs one more drive to verify.
+- [x] **Fuel accuracy fix VERIFIED** (two commutes, 2026-07-08): freeze bug gone
+      (880/835 distinct MAF values), realistic economy **4.3 & 4.4 L/100km** (was
+      12.4), idle **0.48-0.65 L/h**. Car has no PID 015E → load-corrected MAF
+      estimate (`maf-est`) is the active path. Optional further validation:
+      tank-refill cross-check over several tanks.
 - [ ] Power: 12V→5V buck off the OBD port (or USB power bank for now)
 
 > **You can show:** your *actual car's* data in the dashboard. The "it really works"

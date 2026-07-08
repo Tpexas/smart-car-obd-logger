@@ -20,9 +20,22 @@ struct TelemetrySnapshot {
 };
 
 // Instantaneous fuel rate from MAF:  fuel(L/h) = MAF(g/s) * 3600 / (AFR * density).
-// Stoichiometric AFR and fuel density differ for diesel vs petrol.
-inline float fuelRateLphFromMaf(float mafGs, bool diesel) {
-    const float afr     = diesel ? 14.5f  : 14.7f;
-    const float density = diesel ? 832.0f : 745.0f;   // g/L
+//
+// Petrol engines run closed-loop at stoichiometric AFR (~14.7), so a fixed AFR works.
+// Diesels DON'T: they run lean, with AFR swinging from ~80 at idle to ~14.5 at full
+// load — a fixed 14.5 overestimates fuel several-fold at light load. For diesel we
+// approximate AFR from engine load (first-order model; prefer PID 015E when the car
+// supports it — that's a direct fuel-rate reading and needs no model at all).
+inline float fuelRateLphFromMaf(float mafGs, bool diesel, float engineLoadPct) {
+    float afr, density;
+    if (diesel) {
+        float load = engineLoadPct < 15.f ? 15.f : (engineLoadPct > 100.f ? 100.f : engineLoadPct);
+        afr = 14.5f * 100.0f / load;          // light load → very lean
+        if (afr > 80.f) afr = 80.f;
+        density = 832.0f;                      // g/L
+    } else {
+        afr     = 14.7f;
+        density = 745.0f;
+    }
     return mafGs * 3600.0f / (afr * density);
 }
