@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS telemetry (
   fuel        REAL,
   maf         REAL,   -- mass air flow, g/s
   fuel_rate   REAL,   -- instantaneous fuel rate, L/h (from MAF)
-  rail_pressure REAL  -- fuel rail gauge pressure, bar (PID 0123) — CP4 pump health
+  rail_pressure REAL, -- fuel rail gauge pressure, bar (PID 0123) — CP4 pump health
+  map_kpa     REAL    -- intake manifold absolute pressure, kPa (PID 010B) — boost/turbo health
 );
 CREATE INDEX IF NOT EXISTS idx_telemetry_trip ON telemetry(trip_id);
 CREATE INDEX IF NOT EXISTS idx_telemetry_ts   ON telemetry(ts);

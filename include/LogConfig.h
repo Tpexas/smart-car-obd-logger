@@ -28,6 +28,7 @@ enum Signal : uint32_t {
     SIG_MAF       = 1u << 8,
     SIG_FUEL_RATE = 1u << 9,
     SIG_RAIL      = 1u << 10,   // fuel rail gauge pressure (PID 0123) — CP4 pump health
+    SIG_MAP       = 1u << 11,   // intake manifold absolute pressure (PID 010B) — boost/turbo health
 };
 
 struct SigDef { uint32_t bit; const char* key; };
@@ -44,6 +45,7 @@ static const SigDef SIGNALS[] = {
     { SIG_MAF,       "maf"       },
     { SIG_FUEL_RATE, "fuel_rate" },
     { SIG_RAIL,      "rail_pressure" },
+    { SIG_MAP,       "map" },
 };
 static const size_t SIGNAL_COUNT = sizeof(SIGNALS) / sizeof(SIGNALS[0]);
 
@@ -51,11 +53,12 @@ static const size_t SIGNAL_COUNT = sizeof(SIGNALS) / sizeof(SIGNALS[0]);
 static const uint32_t PRESET_STANDARD =
     SIG_RPM | SIG_SPEED | SIG_COOLANT | SIG_INTAKE | SIG_THROTTLE |
     SIG_LOAD | SIG_VOLTAGE | SIG_FUEL | SIG_MAF | SIG_FUEL_RATE;
-// Fuel-system health watch (CP4 / injectors): keeps rpm+speed for trip logic and
-// voltage/coolant for the health trends, adds rail pressure, drops the rest.
+// Fuel-system health watch (CP4 / injectors / turbo): keeps rpm+speed for trip
+// logic and voltage/coolant for the health trends, adds rail pressure + boost
+// (MAP), drops the rest. MAF+fuel_rate together also give AFR (smoke limit).
 static const uint32_t PRESET_FUEL_HEALTH =
     SIG_RPM | SIG_SPEED | SIG_LOAD | SIG_COOLANT | SIG_VOLTAGE |
-    SIG_MAF | SIG_FUEL_RATE | SIG_RAIL;
+    SIG_MAF | SIG_FUEL_RATE | SIG_RAIL | SIG_MAP;
 static const uint32_t PRESET_FULL = 0xFFFFFFFFu;
 
 inline uint32_t maskFromPreset(const char* name) {

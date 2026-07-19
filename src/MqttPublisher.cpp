@@ -100,6 +100,7 @@ bool MqttPublisher::publish(const TelemetrySnapshot& s) {
     if (on(SIG_MAF))       doc["maf"]       = round(s.mafGs * 100) / 100.0;
     if (on(SIG_FUEL_RATE)) doc["fuel_rate"] = round(s.fuelRateLph * 100) / 100.0;
     if (on(SIG_RAIL))      doc["rail_pressure"] = round(s.railPressureBar * 10) / 10.0;
+    if (on(SIG_MAP))       doc["map"]       = (int)(s.mapKpa + 0.5f);
 
     char payload[512];
     size_t n = serializeJson(doc, payload, sizeof(payload));

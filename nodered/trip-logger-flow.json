@@ -28,7 +28,7 @@
     "type": "function",
     "z": "f_trip",
     "name": "build telemetry insert",
-    "func": "const p = msg.payload || {};\nif (!p.trip_id) return null;\nflow.set('lastTripId', p.trip_id);\nmsg.query = 'INSERT INTO telemetry (trip_id, ts, rpm, speed, coolant, intake, throttle, engine_load, voltage, fuel, maf, fuel_rate, rail_pressure) VALUES ($1, to_timestamp($2/1000.0), $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)';\nmsg.params = [p.trip_id, p.ts, p.rpm, p.speed, p.coolant, p.intake, p.throttle, p.load, p.voltage, p.fuel, p.maf, p.fuel_rate, p.rail_pressure];\nreturn msg;",
+    "func": "const p = msg.payload || {};\nif (!p.trip_id) return null;\nflow.set('lastTripId', p.trip_id);\nmsg.query = 'INSERT INTO telemetry (trip_id, ts, rpm, speed, coolant, intake, throttle, engine_load, voltage, fuel, maf, fuel_rate, rail_pressure, map_kpa) VALUES ($1, to_timestamp($2/1000.0), $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)';\nmsg.params = [p.trip_id, p.ts, p.rpm, p.speed, p.coolant, p.intake, p.throttle, p.load, p.voltage, p.fuel, p.maf, p.fuel_rate, p.rail_pressure, p.map];\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",

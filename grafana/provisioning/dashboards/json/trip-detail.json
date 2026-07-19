@@ -259,6 +259,57 @@
         ]
       },
       "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Boost — manifold pressure (kPa abs) — idle ≈100, healthy full pull ≈230-250; low MAP + high load = turbo/leak/EGR",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 45 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", map_kpa AS \"MAP (kPa)\", engine_load * 2.5 AS \"Load (scaled)\" FROM telemetry WHERE trip_id = '$trip' AND map_kpa IS NOT NULL ORDER BY ts",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "decimals": 0, "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "spanNulls": true, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "MAP (kPa)" },
+            "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } } ] },
+          { "matcher": { "id": "byName", "options": "Load (scaled)" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "dark-blue" } },
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.fillOpacity", "value": 0 }
+            ] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Airflow cross-check: MAF vs expected from boost — lines apart = MAF far below → dirty MAF/intake restriction; far above → boost leak",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 53 },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" },
+      "targets": [
+        { "refId": "A", "format": "time_series", "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", maf AS \"MAF measured (g/s)\", map_kpa * rpm * 0.000167 * 0.91 AS \"Expected from boost (g/s)\" FROM telemetry WHERE trip_id = '$trip' AND map_kpa > 0 AND rpm > 800 ORDER BY ts",
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "smartcar_pg" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "decimals": 0, "min": 0, "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "spanNulls": true, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "MAF measured (g/s)" },
+            "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } } ] },
+          { "matcher": { "id": "byName", "options": "Expected from boost (g/s)" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "purple" } },
+              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [6, 4] } }
+            ] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } }
     }
   ]
 }

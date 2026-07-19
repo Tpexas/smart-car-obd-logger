@@ -160,6 +160,17 @@ bool ELM327Source::read(TelemetrySnapshot& out) {
         }
     }
 
+    // Manifold absolute pressure (PID 010B) — boost. Polled every cycle when
+    // active: boost transients under load are exactly what we're after. Idle
+    // ≈ 100 kPa (ambient); a healthy 2.0 TDI full pull should hit ~230-250 kPa.
+    // Low MAP + high load + black smoke = turbo/actuator/boost-leak problem.
+    if (wants(SIG_MAP)) {
+        float mapKpa;
+        if (queryPid(&ELM327::manifoldPressure, mapKpa)) {
+            out.mapKpa = mapKpa;
+        }
+    }
+
     // Secondary, slow-changing PIDs — rotate one active one per cycle to keep each
     // read() within the 1 Hz publish budget.
     switch (_cycle++ % 6) {

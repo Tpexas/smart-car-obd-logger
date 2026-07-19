@@ -133,5 +133,9 @@ bool SimulatorSource::read(TelemetrySnapshot& out) {
     // load toward ~1800 bar at full demand.
     out.railPressureBar = clampf(300.0f + (out.engineLoadPct / 100.0f) * (out.rpm / 4500.0f) * 1450.0f
                                  + frand(-15.0f, 15.0f), 260.0f, 1850.0f);
+
+    // Turbo boost: ambient (~100 kPa) at idle, rising with load toward ~2.4 bar abs.
+    out.mapKpa = clampf(100.0f + (out.engineLoadPct / 100.0f) * 140.0f + frand(-3.0f, 3.0f),
+                        95.0f, 250.0f);
     return true;
 }
