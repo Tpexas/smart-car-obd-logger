@@ -127,35 +127,48 @@ bool ELM327Source::read(TelemetrySnapshot& out) {
 
     // Fuel — prefer PID 015E (direct L/h, correct for diesel). Probe a few times
     // at startup; fall back to the MAF+load estimate if the car never answers.
-    if (_useFuelRatePid || _fuelProbesLeft > 0) {
-        float fr;
-        if (queryPid(&ELM327::fuelRate, fr)) {
-            _useFuelRatePid = true;
-            _fuelProbesLeft = 0;
-            out.fuelRateLph = fr;
-        } else if (!_useFuelRatePid) {
-            _fuelProbesLeft--;
+    if (wants(SIG_FUEL_RATE) || wants(SIG_MAF)) {
+        if (_useFuelRatePid || _fuelProbesLeft > 0) {
+            float fr;
+            if (queryPid(&ELM327::fuelRate, fr)) {
+                _useFuelRatePid = true;
+                _fuelProbesLeft = 0;
+                out.fuelRateLph = fr;
+            } else if (!_useFuelRatePid) {
+                _fuelProbesLeft--;
+            }
         }
-    }
-    if (!_useFuelRatePid && _fuelProbesLeft <= 0) {
-        // MAF fallback needs engine load fresh (the diesel AFR model scales with it).
-        queryPid(&ELM327::engineLoad, out.engineLoadPct);
-        float maf;
-        if (queryPid(&ELM327::mafRate, maf)) {
-            out.mafGs       = maf;
-            out.fuelRateLph = fuelRateLphFromMaf(maf, _diesel, out.engineLoadPct);
+        if (!_useFuelRatePid && _fuelProbesLeft <= 0) {
+            // MAF fallback needs engine load fresh (the diesel AFR model scales with it).
+            queryPid(&ELM327::engineLoad, out.engineLoadPct);
+            float maf;
+            if (queryPid(&ELM327::mafRate, maf)) {
+                out.mafGs       = maf;
+                out.fuelRateLph = fuelRateLphFromMaf(maf, _diesel, out.engineLoadPct);
+            }
         }
     }
 
-    // Secondary PIDs change slowly — rotate one per cycle to keep each read()
-    // fast (a full every-PID sweep was pushing past the 1 Hz publish budget).
+    // Fuel rail gauge pressure (PID 0123). Polled every cycle when active — it
+    // spikes fast under demand, and actual-below-desired at high load is the
+    // earliest Bosch CP4 pump-wear signal.
+    if (wants(SIG_RAIL)) {
+        float railKpa;
+        // NB: "Guage" is ELMduino's own (misspelled) method name for PID 0123.
+        if (queryPid(&ELM327::fuelRailGuagePressure, railKpa)) {
+            out.railPressureBar = railKpa / 100.0f;   // kPa -> bar
+        }
+    }
+
+    // Secondary, slow-changing PIDs — rotate one active one per cycle to keep each
+    // read() within the 1 Hz publish budget.
     switch (_cycle++ % 6) {
-        case 0: queryPid(&ELM327::engineCoolantTemp, out.coolantTempC);   break;
-        case 1: queryPid(&ELM327::intakeAirTemp,     out.intakeTempC);    break;
-        case 2: queryPid(&ELM327::throttle,          out.throttlePct);    break;
-        case 3: queryPid(&ELM327::engineLoad,        out.engineLoadPct);  break;
-        case 4: queryPid(&ELM327::batteryVoltage,    out.batteryVoltage); break;
-        case 5: queryPid(&ELM327::fuelLevel,         out.fuelLevelPct);   break;
+        case 0: if (wants(SIG_COOLANT))  queryPid(&ELM327::engineCoolantTemp, out.coolantTempC);   break;
+        case 1: if (wants(SIG_INTAKE))   queryPid(&ELM327::intakeAirTemp,     out.intakeTempC);    break;
+        case 2: if (wants(SIG_THROTTLE)) queryPid(&ELM327::throttle,          out.throttlePct);    break;
+        case 3: if (wants(SIG_LOAD))     queryPid(&ELM327::engineLoad,        out.engineLoadPct);  break;
+        case 4: if (wants(SIG_VOLTAGE))  queryPid(&ELM327::batteryVoltage,    out.batteryVoltage); break;
+        case 5: if (wants(SIG_FUEL))     queryPid(&ELM327::fuelLevel,         out.fuelLevelPct);   break;
     }
 
     out.timestampMs = millis();

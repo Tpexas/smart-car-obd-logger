@@ -2,6 +2,7 @@
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include "TelemetrySnapshot.h"
+#include "LogConfig.h"
 
 // Owns the MQTT connection and turns a TelemetrySnapshot into a JSON message.
 // Non-blocking: call loop() often; it reconnects in the background with backoff.
@@ -29,11 +30,21 @@ public:
     // message can't overwrite it.
     bool publishDiag(const char* text);
 
+    // Runtime logging config: the device subscribes to `configTopic` and reconfigures
+    // which signals it logs when a message arrives — no re-flash.
+    void setConfig(LogConfig* cfg, const char* configTopic) { _cfg = cfg; _configTopic = configTopic; }
+
 private:
     bool reconnect();
+    void handleConfig(const char* payload);
+    static void onMqttMessage(char* topic, uint8_t* payload, unsigned int len);
+    static MqttPublisher* s_self;
 
     WiFiClientSecure _net;
     PubSubClient     _client;
+
+    LogConfig*  _cfg = nullptr;
+    const char* _configTopic = nullptr;
 
     const char* _host;
     uint16_t    _port;

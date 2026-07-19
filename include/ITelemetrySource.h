@@ -1,6 +1,8 @@
 #pragma once
 #include "TelemetrySnapshot.h"
 
+class LogConfig;   // runtime logging selection (fwd decl — only a pointer is used)
+
 // A source of telemetry. The rest of the firmware programs against this interface,
 // so swapping the simulator for the real ELM327 is a one-line change in main.cpp:
 // just construct ELM327Source instead of SimulatorSource.
@@ -28,4 +30,7 @@ public:
     // Optional longer diagnostic (e.g. a Bluetooth scan result) published to MQTT
     // once after startup. Empty = nothing to report.
     virtual const char* diag() const { return ""; }
+
+    // Share the runtime log config so a source can poll only the active PIDs.
+    virtual void setConfig(LogConfig*) {}
 };

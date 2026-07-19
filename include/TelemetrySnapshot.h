@@ -17,6 +17,7 @@ struct TelemetrySnapshot {
     float    fuelLevelPct  = 0;   // fuel tank level, 0..100 %
     float    mafGs         = 0;   // mass air flow, g/s (PID 0110) — basis for fuel calc
     float    fuelRateLph   = 0;   // computed instantaneous fuel rate, L/h
+    float    railPressureBar = 0; // fuel rail gauge pressure, bar (PID 0123)
 };
 
 // Instantaneous fuel rate from MAF:  fuel(L/h) = MAF(g/s) * 3600 / (AFR * density).

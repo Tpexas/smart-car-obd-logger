@@ -31,6 +31,11 @@
 // Status topic — device publishes connection/OBD state here (watch from phone).
 #define MQTT_STATUS_TOPIC       "smartcar/status"
 
+// Config topic — publish {"preset":"fuel-health"} (retained) here to change what
+// the device logs at runtime, no re-flash. Presets: standard | fuel-health | full.
+#define MQTT_CONFIG_TOPIC       "smartcar/config"
+#define LOG_PRESET              "standard"
+
 // ---- Telemetry source -------------------------------------------------------
 // 0 = simulator (no car needed), 1 = real ELM327 over Bluetooth.
 #define USE_ELM327           0

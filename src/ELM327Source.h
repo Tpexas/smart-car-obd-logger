@@ -1,5 +1,6 @@
 #pragma once
 #include "ITelemetrySource.h"
+#include "LogConfig.h"
 #include "BluetoothSerial.h"
 #include <ELMduino.h>
 
@@ -21,8 +22,12 @@ public:
     bool connected() const override { return _connected; }
     const char* statusText() const override { return _status; }
     const char* diag() const override { return _diag.c_str(); }
+    void setConfig(LogConfig* cfg) override { _cfg = cfg; }
 
 private:
+    // Poll a PID only if its signal is active in the current runtime config.
+    bool wants(uint32_t sig) const { return !_cfg || _cfg->isActive(sig); }
+
     bool connectBt();
     void scanForDevices();   // inquiry scan → fills _diag (names + MACs)
     // Polls one ELMduino PID call until it reaches a FINAL state (success or error).
@@ -52,4 +57,6 @@ private:
     bool    _useFuelRatePid   = false;
     int8_t  _fuelProbesLeft   = 5;
     uint8_t _cycle            = 0;   // rotates the secondary PIDs, one per read()
+
+    LogConfig* _cfg = nullptr;       // which signals to actually poll
 };

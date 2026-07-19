@@ -5,6 +5,7 @@
 
 #include "config.h"
 #include "ca_cert.h"
+#include "LogConfig.h"
 #include "ITelemetrySource.h"
 #if USE_ELM327
   #include "ELM327Source.h"
@@ -12,6 +13,10 @@
   #include "SimulatorSource.h"
 #endif
 #include "MqttPublisher.h"
+
+// Which signals we log — chosen at runtime over MQTT (smartcar/config). Shared by
+// the source (polls only active PIDs) and the publisher (emits only active fields).
+LogConfig gConfig;
 
 // --- The telemetry source -----------------------------------------------------
 // Today: the simulator. When the car is available, write ELM327Source (it just
@@ -115,6 +120,13 @@ void setup() {
     mqtt.setTripId(rtcTripId);
 
     mqtt.setStatusTopic(MQTT_STATUS_TOPIC);
+
+    // Runtime logging selection: default preset now, then reconfigured live by any
+    // retained message on smartcar/config.
+    gConfig.setPreset(LOG_PRESET);
+    mqtt.setConfig(&gConfig, MQTT_CONFIG_TOPIC);
+    telemetry.setConfig(&gConfig);
+    Serial.printf("[Config] default preset: %s\n", gConfig.presetName);
 
 #if MQTT_TLS_INSECURE
     mqtt.begin(nullptr);            // skip cert verification (debug)

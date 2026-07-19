@@ -128,5 +128,10 @@ bool SimulatorSource::read(TelemetrySnapshot& out) {
     out.mafGs       = clampf(3.0f + (out.rpm / 1000.0f) * (out.engineLoadPct / 100.0f) * 14.0f
                              + frand(-0.3f, 0.3f), 1.5f, 60.0f);
     out.fuelRateLph = fuelRateLphFromMaf(out.mafGs, FUEL_IS_DIESEL, out.engineLoadPct);
+
+    // Common-rail diesel rail pressure: ~300 bar at idle, climbing with revs and
+    // load toward ~1800 bar at full demand.
+    out.railPressureBar = clampf(300.0f + (out.engineLoadPct / 100.0f) * (out.rpm / 4500.0f) * 1450.0f
+                                 + frand(-15.0f, 15.0f), 260.0f, 1850.0f);
     return true;
 }

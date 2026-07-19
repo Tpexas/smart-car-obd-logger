@@ -182,6 +182,21 @@ All derivable from data already collected (plus DTC codes, one new firmware read
 
 ## Architecture notes & decisions (FAQ)
 
+- **2026-07-19 — server migration.** Oracle reclaimed the original Always Free VPS
+  (idle policy); trip history to that date was lost (Plan C: accepted, no recovery).
+  Stack rebuilt **from this repo** in one session on the portfolio server
+  (92.5.59.106): Mosquitto (same `mqtt.mazured.com:8883` + same device creds, so
+  firmware needed zero changes), Postgres, Node-RED, Grafana, n8n.
+  **ThingsBoard was dropped** — Grafana is the sole dashboard now. Lesson
+  reinforced: everything-as-code in git made the rebuild ~1 hour; prevention:
+  consider PAYG upgrade (free tier stays free, reclamation stops).
+- **Runtime-selectable logging (2026-07):** the device subscribes to retained
+  `smartcar/config`; presets `standard` / `fuel-health` / `full` (or explicit
+  signal lists) switch what's polled+published live, **no re-flash**. Preset
+  buttons in Node-RED. Added **fuel rail pressure** (PID 0123) for Bosch CP4
+  pump-health monitoring (see Obsidian note "TA ir kuro sistema 2026-07"):
+  watch rail pressure sagging under high load + injector corrections via VCDS.
+
 - **Where's Postgres?** It's *bundled inside* the `thingsboard` container (the
   `tb-postgres` image = ThingsBoard + PostgreSQL together). That's why there's no
   separate `postgres` box in `docker ps`. For *our* `trips` data we add a **dedicated
